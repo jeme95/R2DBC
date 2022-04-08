@@ -39,7 +39,6 @@ public class DemoApplication {
         connection.setTransactionIsolationLevel(IsolationLevel.READ_UNCOMMITTED);
 
 
-
         try {
             //  starting a transaction: Using the beginTransaction method on a MariadbConnection object
             //  will automatically disable auto-commit for the connection.
@@ -54,23 +53,14 @@ public class DemoApplication {
                     .subscribe();
 
         } catch (Exception e) {
+
             //  rolling back all queries within the transaction
             connection.rollbackTransaction().subscribe();
             System.out.println(e.getMessage());
         }
 
 
-//        SpringApplication.run(DemoApplication.class, args);
-        delay(2);
-    }
-
-    //  delay the termination of the thread for 1 second
-    static void delay(long i) {
-        try {
-            Thread.sleep(i * 1000);
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-        }
+        SpringApplication.run(DemoApplication.class, args);
     }
 
     private static MariadbConnection createConnection() {
