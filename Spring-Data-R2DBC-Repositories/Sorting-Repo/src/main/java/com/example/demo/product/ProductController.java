@@ -18,10 +18,12 @@ public class ProductController {
         this.taskService = taskService;
     }
 
-    @GetMapping()
-    public ResponseEntity<Flux> getAll() {
-        logger.info("getAll()");
-        return ResponseEntity.ok(taskService.allProducts);
+
+    //  Request-Example: http://localhost:8080/api/tasks/sorting
+    @GetMapping("sorting")
+    public ResponseEntity<Flux<Product>> getAllSortedByPrice() {
+        logger.info("getAllSortedByPrice()");
+        return ResponseEntity.ok(taskService.getAllSortedByPrice());
     }
 
 
