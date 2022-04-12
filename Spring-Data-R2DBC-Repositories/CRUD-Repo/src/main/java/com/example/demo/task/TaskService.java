@@ -56,6 +56,10 @@ public class TaskService {
         return repository.existsById(id);
     }
 
+    public Mono<Integer> updateStatus(final Task task) {
+        return repository.updateStatus(task.getId(),task.getCompleted());
+    }
+
     // … more functionality omitted.
 
 

@@ -68,4 +68,14 @@ public class TaskController {
         return ResponseEntity.ok(taskService.numberTasks());
     }
 
+    @PutMapping("status")
+    public ResponseEntity<Mono> updateStatus(@RequestBody Task task) {
+        logger.info("updateStatus() : {} : {}",task.getId(),task.getDescription());
+        if (taskService.isValid(task)) {
+            return ResponseEntity.ok(taskService.updateStatus(task));
+        }
+        return ResponseEntity.status(HttpStatus.I_AM_A_TEAPOT).build();
+    }
+
+
 }
