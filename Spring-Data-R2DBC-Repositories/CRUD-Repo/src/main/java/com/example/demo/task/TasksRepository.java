@@ -14,9 +14,8 @@ public interface TasksRepository extends ReactiveCrudRepository<Task, Integer> {
     @Query("UPDATE tasks SET completed = :completed WHERE id = :id")
     Mono<Integer> updateStatus(Integer id, Boolean completed);
 
+    //  Query Methods
     Flux<Task> findByDescriptionContains(String name);
-
-    //    Flux<Task> findByCompletedTrue(boolean completed);
     Flux<Task> findAllByCompletedTrue();
 
 }
