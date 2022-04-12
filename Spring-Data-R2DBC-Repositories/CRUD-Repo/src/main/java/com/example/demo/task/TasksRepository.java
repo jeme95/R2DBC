@@ -20,5 +20,8 @@ public interface TasksRepository extends ReactiveCrudRepository<Task, Integer> {
     Flux<Task> findByDescriptionContains(String name);
     Flux<Task> findAllByCompletedTrue();
 
+    //  Pagination
+    Flux<Task> findAllBy(Pageable pageable);
+
 
 }

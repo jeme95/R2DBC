@@ -94,5 +94,11 @@ public class TaskController {
         return ResponseEntity.ok(taskService.getCompleted());
     }
 
+    //  Request-Example: http://localhost:8080/api/tasks/pagination?page=0&size=3
+    @GetMapping("pagination")
+    public ResponseEntity<Mono<Page<Task>>> getPagination(@RequestParam("page") int page, @RequestParam("size") int size) {
+        logger.info("getPagination()");
+        return ResponseEntity.ok(taskService.getPagination(PageRequest.of(page, size)));
+    }
 
 }

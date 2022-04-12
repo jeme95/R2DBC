@@ -71,6 +71,12 @@ public class TaskService {
         return repository.findAllByCompletedTrue();
     }
 
+    Mono<Page<Task>> getPagination(PageRequest pageRequest) {
+        return this.repository.findAllBy(pageRequest)
+                .collectList()
+                .zipWith(this.repository.count())
+                .map(t -> new PageImpl<>(t.getT1(), pageRequest, t.getT2()));
+    }
 
     // … more functionality omitted.
 
