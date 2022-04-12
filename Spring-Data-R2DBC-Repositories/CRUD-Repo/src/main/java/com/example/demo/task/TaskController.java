@@ -2,6 +2,8 @@ package com.example.demo.task;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +21,7 @@ public class TaskController {
         this.taskService = taskService;
     }
 
+    //  Request-Example: http://localhost:8080/api/tasks
     @GetMapping()
     public ResponseEntity<Flux> getAll() {
         logger.info("getAll()");
@@ -27,7 +30,7 @@ public class TaskController {
 
     @PostMapping()
     public ResponseEntity<Mono> create(@RequestBody Task task) {
-        logger.info("create() : {} : {}",task.getId(),task.getDescription());
+        logger.info("create() : {} : {}", task.getId(), task.getDescription());
         if (taskService.isValid(task)) {
             return ResponseEntity.ok(taskService.createTask(task));
         }
@@ -36,7 +39,7 @@ public class TaskController {
 
     @PutMapping()
     public ResponseEntity<Mono> updateTask(@RequestBody Task task) {
-        logger.info("updateTask() : {} : {}",task.getId(),task.getDescription());
+        logger.info("updateTask() : {} : {}", task.getId(), task.getDescription());
         if (taskService.isValid(task)) {
             return ResponseEntity.ok(taskService.updateTask(task));
         }
@@ -45,7 +48,7 @@ public class TaskController {
 
     @PutMapping("save")
     public ResponseEntity<Mono> updateTask2(@RequestBody Task task) {
-        logger.info("updateTask2() : {} : {}",task.getId(),task.getDescription());
+        logger.info("updateTask2() : {} : {}", task.getId(), task.getDescription());
         if (taskService.isValid(task)) {
             return ResponseEntity.ok(taskService.updateTask2(task));
         }
@@ -54,13 +57,14 @@ public class TaskController {
 
     @DeleteMapping()
     public ResponseEntity<Mono> delete(@RequestParam int id) {
-        logger.info("delete() : {}",id);
+        logger.info("delete() : {}", id);
         if (id > 0) {
             return ResponseEntity.ok(taskService.deleteTask(id));
         }
         return ResponseEntity.status(HttpStatus.I_AM_A_TEAPOT).build();
     }
 
+    //  Request-Example: http://localhost:8080/api/tasks/number
     @GetMapping("number")
     public ResponseEntity<Mono<Long>> getNumberTasks() {
         logger.info("getNumberTasks()");
@@ -69,19 +73,21 @@ public class TaskController {
 
     @PutMapping("status")
     public ResponseEntity<Mono> updateStatus(@RequestBody Task task) {
-        logger.info("updateStatus() : {} : {}",task.getId(),task.getDescription());
+        logger.info("updateStatus() : {} : {}", task.getId(), task.getDescription());
         if (taskService.isValid(task)) {
             return ResponseEntity.ok(taskService.updateStatus(task));
         }
         return ResponseEntity.status(HttpStatus.I_AM_A_TEAPOT).build();
     }
 
-    @GetMapping("contains/{searchTerm}")
-    public ResponseEntity<Flux<Task>> getDescriptionContains(@PathVariable("searchTerm") String searchTerm) {
-        logger.info("getDescriptionContains({}) ",searchTerm);
+    //  Request-Example: http://localhost:8080/api/tasks/contains?searchTerm=task
+    @GetMapping("contains")
+    public ResponseEntity<Flux<Task>> getDescriptionContains(@RequestParam("searchTerm") String searchTerm) {
+        logger.info("getDescriptionContains({}) ", searchTerm);
         return ResponseEntity.ok(taskService.getDescriptionContains(searchTerm));
     }
 
+    //  Request-Example: http://localhost:8080/api/tasks/completed
     @GetMapping("completed")
     public ResponseEntity<Flux> getCompleted() {
         logger.info("getCompleted()");

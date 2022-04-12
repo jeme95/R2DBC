@@ -1,6 +1,9 @@
 package com.example.demo.task;
 
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -43,7 +46,7 @@ public class TaskService {
     }
 
     @Transactional
-    public Mono deleteTask(final int id){
+    public Mono deleteTask(final int id) {
         return this.repository.findById(id)
                 .flatMap(this.repository::delete);
     }
@@ -57,7 +60,7 @@ public class TaskService {
     }
 
     public Mono<Integer> updateStatus(final Task task) {
-        return repository.updateStatus(task.getId(),task.getCompleted());
+        return repository.updateStatus(task.getId(), task.getCompleted());
     }
 
     Flux<Task> getDescriptionContains(String searchTerm) {
@@ -67,6 +70,7 @@ public class TaskService {
     Flux<Task> getCompleted() {
         return repository.findAllByCompletedTrue();
     }
+
 
     // … more functionality omitted.
 
