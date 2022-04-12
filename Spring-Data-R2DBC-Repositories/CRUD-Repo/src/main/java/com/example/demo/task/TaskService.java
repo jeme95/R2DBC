@@ -60,6 +60,10 @@ public class TaskService {
         return repository.updateStatus(task.getId(),task.getCompleted());
     }
 
+    Flux<Task> getDescriptionContains(String searchTerm) {
+        return repository.findByDescriptionContains(searchTerm);
+    }
+
     // … more functionality omitted.
 
 

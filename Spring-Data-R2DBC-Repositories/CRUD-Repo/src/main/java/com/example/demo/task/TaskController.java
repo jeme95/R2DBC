@@ -77,5 +77,11 @@ public class TaskController {
         return ResponseEntity.status(HttpStatus.I_AM_A_TEAPOT).build();
     }
 
+    @GetMapping("contains/{searchTerm}")
+    public ResponseEntity<Flux<Task>> getDescriptionContains(@PathVariable("searchTerm") String searchTerm) {
+        logger.info("getDescriptionContains({}) ",searchTerm);
+        return ResponseEntity.ok(taskService.getDescriptionContains(searchTerm));
+    }
+
 
 }
