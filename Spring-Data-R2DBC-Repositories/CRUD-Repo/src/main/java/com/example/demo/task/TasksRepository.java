@@ -15,4 +15,8 @@ public interface TasksRepository extends ReactiveCrudRepository<Task, Integer> {
     Mono<Integer> updateStatus(Integer id, Boolean completed);
 
     Flux<Task> findByDescriptionContains(String name);
+
+    //    Flux<Task> findByCompletedTrue(boolean completed);
+    Flux<Task> findAllByCompletedTrue();
+
 }

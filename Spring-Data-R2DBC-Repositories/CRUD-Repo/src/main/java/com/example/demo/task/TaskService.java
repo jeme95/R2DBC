@@ -64,6 +64,10 @@ public class TaskService {
         return repository.findByDescriptionContains(searchTerm);
     }
 
+    Flux<Task> getCompleted() {
+        return repository.findAllByCompletedTrue();
+    }
+
     // … more functionality omitted.
 
 

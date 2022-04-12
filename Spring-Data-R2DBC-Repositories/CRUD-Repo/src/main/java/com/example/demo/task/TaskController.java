@@ -19,7 +19,6 @@ public class TaskController {
         this.taskService = taskService;
     }
 
-
     @GetMapping()
     public ResponseEntity<Flux> getAll() {
         logger.info("getAll()");
@@ -81,6 +80,12 @@ public class TaskController {
     public ResponseEntity<Flux<Task>> getDescriptionContains(@PathVariable("searchTerm") String searchTerm) {
         logger.info("getDescriptionContains({}) ",searchTerm);
         return ResponseEntity.ok(taskService.getDescriptionContains(searchTerm));
+    }
+
+    @GetMapping("completed")
+    public ResponseEntity<Flux> getCompleted() {
+        logger.info("getCompleted()");
+        return ResponseEntity.ok(taskService.getCompleted());
     }
 
 
