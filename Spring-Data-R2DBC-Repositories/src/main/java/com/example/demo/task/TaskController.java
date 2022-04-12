@@ -23,14 +23,14 @@ public class TaskController {
     @GetMapping()
     public ResponseEntity<Flux> getAll() {
         logger.info("getAll()");
-        return ResponseEntity.ok(this.taskService.getAllTasks());
+        return ResponseEntity.ok(taskService.getAllTasks());
     }
 
     @PostMapping()
     public ResponseEntity<Mono> create(@RequestBody Task task) {
         logger.info("create() : {} : {}",task.getId(),task.getDescription());
         if (taskService.isValid(task)) {
-            return ResponseEntity.ok(this.taskService.createTask(task));
+            return ResponseEntity.ok(taskService.createTask(task));
         }
         return ResponseEntity.status(HttpStatus.I_AM_A_TEAPOT).build();
     }
@@ -39,7 +39,16 @@ public class TaskController {
     public ResponseEntity<Mono> updateTask(@RequestBody Task task) {
         logger.info("updateTask() : {} : {}",task.getId(),task.getDescription());
         if (taskService.isValid(task)) {
-            return ResponseEntity.ok(this.taskService.updateTask(task));
+            return ResponseEntity.ok(taskService.updateTask(task));
+        }
+        return ResponseEntity.status(HttpStatus.I_AM_A_TEAPOT).build();
+    }
+
+    @PutMapping("save")
+    public ResponseEntity<Mono> updateTask2(@RequestBody Task task) {
+        logger.info("updateTask2() : {} : {}",task.getId(),task.getDescription());
+        if (taskService.isValid(task)) {
+            return ResponseEntity.ok(taskService.updateTask2(task));
         }
         return ResponseEntity.status(HttpStatus.I_AM_A_TEAPOT).build();
     }
@@ -48,9 +57,15 @@ public class TaskController {
     public ResponseEntity<Mono> delete(@RequestParam int id) {
         logger.info("delete() : {}",id);
         if (id > 0) {
-            return ResponseEntity.ok(this.taskService.deleteTask(id));
+            return ResponseEntity.ok(taskService.deleteTask(id));
         }
         return ResponseEntity.status(HttpStatus.I_AM_A_TEAPOT).build();
+    }
+
+    @GetMapping("number")
+    public ResponseEntity<Mono<Long>> getNumberTasks() {
+        logger.info("getNumberTasks()");
+        return ResponseEntity.ok(taskService.numberTasks());
     }
 
 }

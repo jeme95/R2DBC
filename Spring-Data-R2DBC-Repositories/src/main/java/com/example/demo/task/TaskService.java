@@ -38,12 +38,25 @@ public class TaskService {
                 });
     }
 
-
+    public Mono<Task> updateTask2(final Task task) {
+        return repository.save(task);
+    }
 
     @Transactional
     public Mono deleteTask(final int id){
         return this.repository.findById(id)
                 .flatMap(this.repository::delete);
     }
+
+    public Mono<Long> numberTasks() {
+        return repository.count();
+    }
+
+    public Mono<Boolean> existsById(Integer id) {
+        return repository.existsById(id);
+    }
+
+    // … more functionality omitted.
+
 
 }
