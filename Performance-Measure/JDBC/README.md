@@ -1,6 +1,6 @@
 # Blocking: Spring Boot Web MVC, Spring Data JPA with Hibernate and Connection pooling using HikariCP
 
-# Throughput and response time at different concurrencies
+## Throughput and response time at different concurrencies
 
 Concurrency Level: Number of multiple requests to make at a time
 Complete requests: Total number of requests to perform
