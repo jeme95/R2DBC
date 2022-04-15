@@ -1,7 +1,7 @@
-# R2DBC with Spring Data R2DBC using Spring Data connection pool
+# Throughput and response time at different concurrencies
 
 
-## Throughput and response time at different concurrencies
+## R2DBC with Spring Data R2DBC using Spring Data connection pool
 
 Concurrency Level: Number of multiple requests to make at a time
 Complete requests: Total number of requests to perform
