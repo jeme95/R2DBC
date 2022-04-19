@@ -41,11 +41,12 @@ public class DemoApplication {
 
         MariadbConnectionFactory connFactoryProg = new MariadbConnectionFactory(conf);
 
-        Mono<MariadbConnection> mariadbConnectionMono = connFactoryProg.create();
+        Mono<MariadbConnection> connectionMono = connFactoryProg.create();
 
-        mariadbConnectionMono.subscribe(mariadbConnection1 -> {
-            validateConnection(mariadbConnection1, "mariadbConnection1");
-            closeConnection(mariadbConnection1);
+        connectionMono.subscribe(connection -> {
+            validateConnection(connection, "connFactoryProg");
+            /* do some stuff with the connection*/
+            closeConnection(connection);
         });
 
     }
@@ -65,11 +66,14 @@ public class DemoApplication {
         MariadbConnectionFactory connFactoryProg2 = (MariadbConnectionFactory)
                 ConnectionFactories.get(connectionFactoryOptions);
 
-        MariadbConnection mariadbConnection = connFactoryProg2.create().block();
+        Mono<MariadbConnection> connectionMono = connFactoryProg2.create();
 
-        validateConnection(mariadbConnection, "connFactoryProg2");
+        connectionMono.subscribe(connection -> {
+            validateConnection(connection, "connFactoryProg2");
+            /* do some stuff with the connection*/
+            closeConnection(connection);
+        });
 
-        closeConnection(mariadbConnection);
 
     }
 
@@ -80,8 +84,8 @@ public class DemoApplication {
 
     }
 
-    private static void validateConnection(MariadbConnection mariadbConnectionMono, String src) {
-        Publisher<Boolean> validatePublisher = mariadbConnectionMono.validate(ValidationDepth.LOCAL);
+    private static void validateConnection(MariadbConnection connection, String src) {
+        Publisher<Boolean> validatePublisher = connection.validate(ValidationDepth.LOCAL);
         Mono<Boolean> monoValidated = Mono.from(validatePublisher);
         monoValidated.subscribe(validated -> {
             if (validated) {
@@ -90,13 +94,14 @@ public class DemoApplication {
                 System.out.println("Connection is not valid");
             }
         });
+
     }
 
-    private static void closeConnection(MariadbConnection mariadbConnection) {
-        Publisher<Void> closePublisher = mariadbConnection.close();
+    private static void closeConnection(MariadbConnection connection) {
+        Publisher<Void> closePublisher = connection.close();
         Mono<Void> monoClose = Mono.from(closePublisher);
         monoClose.subscribe();
-    }
 
+    }
 
 }
