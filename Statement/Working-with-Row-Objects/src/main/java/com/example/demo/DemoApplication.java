@@ -14,36 +14,31 @@ import reactor.core.publisher.Mono;
 
 @SpringBootApplication
 public class DemoApplication {
-
-
+    
     public static void main(String[] args) {
 
-
         // establishing a Connection
-        MariadbConnection connection = createConnection();
+        Mono<MariadbConnection> monoConnection = createConnection();
 
-        // validating the Connection
-        validateConnection(connection);
+        monoConnection.subscribe(connection -> {
+            MariadbStatement selectStatement = connection.createStatement("SELECT * FROM todo.tasks;");
+            Flux<MariadbResult> publisher = selectStatement.execute();
+            publisher.flatMap(result -> result.map((row, metadata) -> {
+                        Integer id = row.get(0, Integer.class);
+                        String descriptionFromAlias = row.get("description", String.class);
+                        String isCompleted = (row.get(2, Boolean.class) == true) ? "Yes" : "No";
+                        return String.format("ID: %s - Description: %s -Completed: %s", id, descriptionFromAlias, isCompleted);
+                    }))
+                    .subscribe(System.out::println);
+        });
 
-        MariadbStatement selectStatement = connection.createStatement("SELECT * FROM todo.tasks;");
-
-        Flux<MariadbResult> publisher = selectStatement.execute();
-
-        publisher.flatMap(result -> result.map((row, metadata) -> {
-                    Integer id = row.get(0, Integer.class);
-                    String descriptionFromAlias = row.get("description", String.class);
-                    String isCompleted = (row.get(2, Boolean.class) == true) ? "Yes" : "No";
-                    return String.format("ID: %s - Description: %s -Completed: %s", id, descriptionFromAlias, isCompleted);
-
-                }))
-                .subscribe(System.out::println);
 
 //        keep the application running, otherwise the main thread may end before
 //        the result has been retrieved / before the statement was executed
         SpringApplication.run(DemoApplication.class, args);
     }
 
-    private static MariadbConnection createConnection() {
+    private static Mono<MariadbConnection> createConnection() {
 
         MariadbConnectionConfiguration conf = MariadbConnectionConfiguration.builder()
                 .host("127.0.0.1")
@@ -55,21 +50,8 @@ public class DemoApplication {
 
         MariadbConnectionFactory connFactoryProg = new MariadbConnectionFactory(conf);
 
-        return connFactoryProg.create().block();
+        return connFactoryProg.create();
 
-    }
-
-
-    private static void validateConnection(MariadbConnection mariadbConnectionMono) {
-        Publisher<Boolean> validatePublisher = mariadbConnectionMono.validate(ValidationDepth.LOCAL);
-        Mono<Boolean> monoValidated = Mono.from(validatePublisher);
-        monoValidated.subscribe(validated -> {
-            if (validated) {
-                System.out.println("Connection is valid");
-            } else {
-                System.out.println("Connection is not valid");
-            }
-        });
     }
 
 
