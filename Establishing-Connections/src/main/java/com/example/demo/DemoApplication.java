@@ -41,14 +41,12 @@ public class DemoApplication {
 
         MariadbConnectionFactory connFactoryProg = new MariadbConnectionFactory(conf);
 
-//        block to wait until the connection is established (vgl. async-await in js)
-        MariadbConnection mariadbConnection = connFactoryProg.create().block();
+        Mono<MariadbConnection> mariadbConnectionMono = connFactoryProg.create();
 
-        mariadbConnection.createStatement("SELECT * FROM todo.tasks;");
-
-        validateConnection(mariadbConnection, "connFactoryProg");
-
-        closeConnection(mariadbConnection);
+        mariadbConnectionMono.subscribe(mariadbConnection1 -> {
+            validateConnection(mariadbConnection1, "mariadbConnection1");
+            closeConnection(mariadbConnection1);
+        });
 
     }
 
