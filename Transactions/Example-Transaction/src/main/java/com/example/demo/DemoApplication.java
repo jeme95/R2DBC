@@ -4,15 +4,10 @@ import io.r2dbc.spi.*;
 import org.mariadb.r2dbc.MariadbConnectionConfiguration;
 import org.mariadb.r2dbc.MariadbConnectionFactory;
 import org.mariadb.r2dbc.api.MariadbConnection;
-import org.mariadb.r2dbc.api.MariadbResult;
 import org.mariadb.r2dbc.api.MariadbStatement;
-import org.reactivestreams.Publisher;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.sql.SQLException;
 
 @SpringBootApplication
 public class DemoApplication {
@@ -22,48 +17,51 @@ public class DemoApplication {
 
 
         // establishing a Connection
-        MariadbConnection connection = createConnection();
+        Mono<MariadbConnection> monoConnection = createConnection();
+
+        monoConnection.subscribe(connection -> {
+
+            //  example for checking and disabling AutoCommit-Mode: in MariaDB superfluous: see below
+            if (connection.isAutoCommit()) {
+                connection.setAutoCommit(false);
+            }
 
 
-        //  example for checking and disabling AutoCommit-Mode: in MariaDB superfluous: see below
-        if (connection.isAutoCommit()) {
-            connection.setAutoCommit(false).block();
-        }
+            // get the current Isolation Level
+            System.out.println(connection.getTransactionIsolationLevel().asSql());
+
+            //  changing the Isolation Level
+            //  Possible levels: READ_COMMITTED, READ_UNCOMMITTED, REPEATABLE_READ, SERIALIZABLE
+            connection.setTransactionIsolationLevel(IsolationLevel.READ_UNCOMMITTED);
 
 
-        // get the current Isolation Level
-        System.out.println(connection.getTransactionIsolationLevel().asSql());
+            try {
+                //  starting a transaction: Using the beginTransaction method on a MariadbConnection object
+                //  will automatically disable auto-commit for the connection.
+                connection.beginTransaction().subscribe();
 
-        //  changing the Isolation Level
-        //  Possible levels: READ_COMMITTED, READ_UNCOMMITTED, REPEATABLE_READ, SERIALIZABLE
-        connection.setTransactionIsolationLevel(IsolationLevel.READ_UNCOMMITTED);
+                //  executing a transaction for making a money transfer
+                MariadbStatement increaseReceiverStmt = connection.createStatement("UPDATE bank.customers SET balance=balance+50 WHERE  id=4 AND NAME='Max';");
+                increaseReceiverStmt.execute();
+                MariadbStatement decreaseSenderStmt = connection.createStatement("UPDATE bank.customers SET balance=balance-50 WHERE  id=2 AND NAME='Anna';");
+                decreaseSenderStmt.execute()
+                        .then(connection.commitTransaction())
+                        .subscribe();
 
+            } catch (Exception e) {
 
-        try {
-            //  starting a transaction: Using the beginTransaction method on a MariadbConnection object
-            //  will automatically disable auto-commit for the connection.
-            connection.beginTransaction().subscribe();
+                //  rolling back all queries within the transaction
+                connection.rollbackTransaction().subscribe();
+                System.out.println(e.getMessage());
+            }
 
-            //  executing a transaction for making a money transfer
-            MariadbStatement increaseReceiverStmt = connection.createStatement("UPDATE bank.customers SET balance=balance+50 WHERE  id=4 AND NAME='Max';");
-            increaseReceiverStmt.execute();
-            MariadbStatement decreaseSenderStmt = connection.createStatement("UPDATE bank.customers SET balance=balance-50 WHERE  id=2 AND NAME='Anna';");
-            decreaseSenderStmt.execute()
-                    .then(connection.commitTransaction())
-                    .subscribe();
-
-        } catch (Exception e) {
-
-            //  rolling back all queries within the transaction
-            connection.rollbackTransaction().subscribe();
-            System.out.println(e.getMessage());
-        }
+        });
 
 
         SpringApplication.run(DemoApplication.class, args);
     }
 
-    private static MariadbConnection createConnection() {
+    private static Mono<MariadbConnection> createConnection() {
 
         MariadbConnectionConfiguration conf = MariadbConnectionConfiguration.builder()
                 .host("127.0.0.1")
@@ -75,7 +73,7 @@ public class DemoApplication {
 
         MariadbConnectionFactory connFactoryProg = new MariadbConnectionFactory(conf);
 
-        return connFactoryProg.create().block();
+        return connFactoryProg.create();
 
     }
 
