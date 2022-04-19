@@ -1,6 +1,5 @@
 package com.example.demo;
 
-import io.r2dbc.spi.*;
 import org.mariadb.r2dbc.MariadbConnectionConfiguration;
 import org.mariadb.r2dbc.MariadbConnectionFactory;
 import org.mariadb.r2dbc.api.MariadbConnection;
@@ -20,28 +19,32 @@ public class DemoApplication {
 
 
         // establishing a Connection
-        MariadbConnection mariadbConnection = createConnection();
+        Mono<MariadbConnection> monoConnection = createConnection();
 
-        // validating the Connection
-        validateConnection(mariadbConnection);
+        monoConnection.subscribe(connection -> {
 
-        MariadbStatement updateStatement = mariadbConnection.createStatement("UPDATE todo.tasks SET description='set by java' WHERE  id=13;");
-        MariadbStatement insertStatement = mariadbConnection.createStatement("INSERT INTO todo.tasks (description,completed) VALUES ('New Task 1',0);");
-        MariadbStatement deleteStatement = mariadbConnection.createStatement("DELETE FROM todo.tasks WHERE  id=16;");
+            MariadbStatement updateStatement = connection.createStatement("UPDATE todo.tasks SET description='set by java' WHERE  id=13;");
+            MariadbStatement insertStatement = connection.createStatement("INSERT INTO todo.tasks (description,completed) VALUES ('New Task 1',0);");
+            MariadbStatement deleteStatement = connection.createStatement("DELETE FROM todo.tasks WHERE  id=12;");
 
+            Flux<MariadbResult> publisher = insertStatement.execute();
 
-        Flux<MariadbResult> publisher = deleteStatement.execute();
+            // Retrieve and print the number of rows affected
+            publisher.subscribe(result -> result.getRowsUpdated().
+                    subscribe(count -> {
+                        System.out.println(count.toString());
+                        closeConnection(connection);
+                    }));
 
-        // Retrieve and print the number of rows affected
-        publisher.subscribe(result -> result.getRowsUpdated().
-                subscribe(count -> System.out.println(count.toString())));
+        });
+
 
 //        keep the application running, otherwise the main thread may end before
 //        the result has been retrieved / before the statement was executed
         SpringApplication.run(DemoApplication.class, args);
     }
 
-    private static MariadbConnection createConnection() {
+    private static Mono<MariadbConnection> createConnection() {
 
         MariadbConnectionConfiguration conf = MariadbConnectionConfiguration.builder()
                 .host("127.0.0.1")
@@ -53,22 +56,10 @@ public class DemoApplication {
 
         MariadbConnectionFactory connFactoryProg = new MariadbConnectionFactory(conf);
 
-        return connFactoryProg.create().block();
+        return connFactoryProg.create();
 
     }
 
-
-    private static void validateConnection(MariadbConnection mariadbConnectionMono) {
-        Publisher<Boolean> validatePublisher = mariadbConnectionMono.validate(ValidationDepth.LOCAL);
-        Mono<Boolean> monoValidated = Mono.from(validatePublisher);
-        monoValidated.subscribe(validated -> {
-            if (validated) {
-                System.out.println("Connection is valid");
-            } else {
-                System.out.println("Connection is not valid");
-            }
-        });
-    }
 
     private static void closeConnection(MariadbConnection mariadbConnection) {
         Publisher<Void> closePublisher = mariadbConnection.close();
