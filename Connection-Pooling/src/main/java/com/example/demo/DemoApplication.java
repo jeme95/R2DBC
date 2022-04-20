@@ -3,14 +3,11 @@ package com.example.demo;
 import io.r2dbc.pool.ConnectionPool;
 import io.r2dbc.pool.ConnectionPoolConfiguration;
 import io.r2dbc.spi.Connection;
-import io.r2dbc.spi.Result;
 import org.mariadb.r2dbc.MariadbConnectionConfiguration;
 import org.mariadb.r2dbc.MariadbConnectionFactory;
-import org.reactivestreams.Publisher;
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 
@@ -22,38 +19,20 @@ public class DemoApplication {
 
 
         // Creating a Connection
-        Connection connection = acquireConnection();
+        Mono<Connection> connectionMono = acquireConnection();
 
-        // Doing some stuff with the Connection
-        Publisher<? extends Result> execute = connection.createStatement("UPDATE todo.tasks SET completed=1 WHERE  id=4;").execute();
-        execute.subscribe(new Subscriber<Result>() {
+        connectionMono.subscribe(connection -> {
 
-            @Override
-            public void onSubscribe(Subscription subscription) {
-                // what to do, when subscription is created
-            }
+            //  doing some stuff with the connection
 
-            @Override
-            public void onNext(Result result) {
-                // what to do, when items published
-            }
+            //  then releasing the Connection
+            releaseConnection(connection);
 
-            @Override
-            public void onError(Throwable throwable) {
-                // what to do, if error occurred
-            }
 
-            @Override
-            public void onComplete() {
-                // what to do, if streaming accomplished
-            }
         });
 
-        // releasing the Connection
-        releaseConnection(connection);
-
-        // see below method documentation
-        disposePool(connectionPool);
+        //  you can also dispose the connection pool when you are done
+        //  disposePool(connectionPool);
 
         SpringApplication.run(DemoApplication.class, args);
     }
@@ -76,8 +55,8 @@ public class DemoApplication {
     private static final ConnectionPool connectionPool = new ConnectionPool(configuration);
 
 
-    private static Connection acquireConnection() {
-        return connectionPool.create().block();
+    private static Mono<Connection> acquireConnection() {
+        return connectionPool.create();
     }
 
     private static void releaseConnection(Connection connection) {
