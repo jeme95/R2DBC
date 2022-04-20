@@ -20,21 +20,24 @@ public class DemoApplication {
 
 
         // establishing a Connection
-        MariadbConnection connection = createConnection();
+        Mono<MariadbConnection> monoConnection = createConnection();
 
-        // validating the Connection
-        validateConnection(connection);
+        monoConnection.subscribe(connection -> {
 
-        MariadbStatement insertStatement = connection.createStatement("INSERT INTO todo.tasks (description) VALUES ('New Task')")
-                .returnGeneratedValues("id");
+            MariadbStatement insertStatement = connection.createStatement("INSERT INTO todo.tasks (description) VALUES ('New Task')")
+                    .returnGeneratedValues("id");
 
-        Flux<MariadbResult> publisher = insertStatement.execute();
+            Flux<MariadbResult> publisher = insertStatement.execute();
 
-        publisher.flatMap(result -> result.map((row, metadata) -> {
-                    Object id = row.get("id");
-                    return String.format("ID: %s", id);
-                }))
-                .subscribe(System.out::println);
+            publisher.flatMap(result -> result.map((row, metadata) -> {
+                        Object id = row.get("id");
+                        return String.format("ID: %s", id);
+                    }))
+                    .subscribe(System.out::println);
+            
+        });
+
+
 
 
 //        keep the application running, otherwise the main thread may end before
@@ -42,7 +45,7 @@ public class DemoApplication {
         SpringApplication.run(DemoApplication.class, args);
     }
 
-    private static MariadbConnection createConnection() {
+    private static Mono<MariadbConnection> createConnection() {
 
         MariadbConnectionConfiguration conf = MariadbConnectionConfiguration.builder()
                 .host("127.0.0.1")
@@ -54,7 +57,7 @@ public class DemoApplication {
 
         MariadbConnectionFactory connFactoryProg = new MariadbConnectionFactory(conf);
 
-        return connFactoryProg.create().block();
+        return connFactoryProg.create();
 
     }
 
