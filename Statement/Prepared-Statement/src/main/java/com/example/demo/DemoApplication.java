@@ -20,38 +20,38 @@ public class DemoApplication {
 
 
         // establishing a Connection
-        MariadbConnection connection = createConnection();
+        Mono<MariadbConnection> monoConnection = createConnection();
 
-        // validating the Connection
-        validateConnection(connection);
+        monoConnection.subscribe(connection -> {
 
+            //      binding by index
+            MariadbStatement selectStatement = connection.createStatement("SELECT id, description AS task, completed FROM todo.tasks WHERE id > ?");
+            selectStatement.bind(0, 3);
 
-//      binding by index
-        MariadbStatement selectStatement = connection.createStatement("SELECT id, description AS task, completed FROM todo.tasks WHERE id > ?");
-        selectStatement.bind(0, 3);
-
-//        alternative: binding by name
-//        MariadbStatement selectStatement = connection.createStatement("SELECT id, description AS task, completed FROM todo.tasks WHERE id > :id");
-//        selectStatement.bind("id",5);
+            //  alternative: binding by name
+            //  selectStatement.bind("id",5);
 
 
-        Flux<MariadbResult> publisher = selectStatement.execute();
+            Flux<MariadbResult> publisher = selectStatement.execute();
 
-        publisher.flatMap(result -> result.map((row, metadata) -> {
-                    Integer id = row.get(0, Integer.class);
-                    String descriptionFromAlias = row.get("task", String.class);
-                    String isCompleted = (row.get(2, Boolean.class) == true) ? "Yes" : "No";
-                    return String.format("ID: %s - Description: %s -Completed: %s", id, descriptionFromAlias, isCompleted);
+            publisher.flatMap(result -> result.map((row, metadata) -> {
+                        Integer id = row.get(0, Integer.class);
+                        String descriptionFromAlias = row.get("task", String.class);
+                        String isCompleted = (row.get(2, Boolean.class) == true) ? "Yes" : "No";
+                        return String.format("ID: %s - Description: %s -Completed: %s", id, descriptionFromAlias, isCompleted);
 
-                }))
-                .subscribe(System.out::println);
+                    }))
+                    .subscribe(System.out::println);
+
+        });
+
 
 //        keep the application running, otherwise the main thread may end before
 //        the result has been retrieved / before the statement was executed
         SpringApplication.run(DemoApplication.class, args);
     }
 
-    private static MariadbConnection createConnection() {
+    private static Mono<MariadbConnection> createConnection() {
 
         MariadbConnectionConfiguration conf = MariadbConnectionConfiguration.builder()
                 .host("127.0.0.1")
@@ -63,7 +63,7 @@ public class DemoApplication {
 
         MariadbConnectionFactory connFactoryProg = new MariadbConnectionFactory(conf);
 
-        return connFactoryProg.create().block();
+        return connFactoryProg.create();
 
     }
 
