@@ -20,28 +20,29 @@ public class DemoApplication {
 
 
         // establishing a Connection
-        MariadbConnection connection = createConnection();
+        Mono<MariadbConnection> connectionMono = createConnection();
 
-        // validating the Connection
-        validateConnection(connection);
+        connectionMono.subscribe(connection -> {
 
-        MariadbStatement selectStatement = connection.createStatement("SELECT * FROM todo.tasks WHERE id = 3;");
+            MariadbStatement selectStatement = connection.createStatement("SELECT * FROM todo.tasks WHERE id = 3;");
 
-        Flux<MariadbResult> publisher = selectStatement.execute();
+            Flux<MariadbResult> publisher = selectStatement.execute();
 
-        publisher.flatMap(result -> result.map((row, metadata) -> {
+            publisher.flatMap(result -> result.map((row, metadata) -> {
 
-                    metadata.getColumnMetadatas().forEach(columnMetadata -> {
-                        System.out.println(columnMetadata.getName());
-                        System.out.println(columnMetadata.getJavaType());
-                        System.out.println(columnMetadata.getNativeTypeMetadata());
-                        System.out.println(columnMetadata.getPrecision());
+                        metadata.getColumnMetadatas().forEach(columnMetadata -> {
+                            System.out.println(columnMetadata.getName());
+                            System.out.println(columnMetadata.getJavaType());
+                            System.out.println(columnMetadata.getNativeTypeMetadata());
+                            System.out.println(columnMetadata.getPrecision());
 //                      etc ...
-                    });
-                    return "";
+                        });
+                        return "";
 
-                }))
-                .subscribe();
+                    }))
+                    .subscribe();
+
+        });
 
 
 //      keep the application running, otherwise the main thread may end before
@@ -49,7 +50,7 @@ public class DemoApplication {
         SpringApplication.run(DemoApplication.class, args);
     }
 
-    private static MariadbConnection createConnection() {
+    private static Mono<MariadbConnection> createConnection() {
 
         MariadbConnectionConfiguration conf = MariadbConnectionConfiguration.builder()
                 .host("127.0.0.1")
@@ -61,7 +62,7 @@ public class DemoApplication {
 
         MariadbConnectionFactory connFactoryProg = new MariadbConnectionFactory(conf);
 
-        return connFactoryProg.create().block();
+        return connFactoryProg.create();
 
     }
 
